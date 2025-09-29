@@ -31,8 +31,14 @@ class CalendarEntry:
         """
         Save entry to system.
         """
-        with open(f"{APP_DIR}/calendar_data.json", "a", encoding="utf-8") as data_file:
-            json.dump(self.to_dict(), data_file, indent=4)
+        with open(f"{APP_DIR}/calendar_data.json", "r", encoding="utf-8") as data_file:
+            data = json.load(data_file)
+
+        data.append(self.to_dict())
+
+        with open(f"{APP_DIR}/calendar_data.json", "w", encoding="utf-8") as data_file:
+            json.dump(data, data_file, indent=4)
+
 
 
 @dataclass()
@@ -45,10 +51,10 @@ class EntryConstructor:
     2) cli command: upon calling, creates instance of EntryConstructor and has it perform something, then saves it to .calendar/constructor_state.json
     """
 
-    _datetime: str | None = DEFAULT_CONSTRUCTOR_STATE["datetime"]
-    _duration: int | None = DEFAULT_CONSTRUCTOR_STATE["duration"]
-    _periodicity: str | None = DEFAULT_CONSTRUCTOR_STATE["periodicity"]
-    _note: str | None = DEFAULT_CONSTRUCTOR_STATE["note"]
+    _datetime: str = DEFAULT_CONSTRUCTOR_STATE["datetime"]
+    _duration: int  = DEFAULT_CONSTRUCTOR_STATE["duration"]
+    _periodicity: str  = DEFAULT_CONSTRUCTOR_STATE["periodicity"]
+    _note: str = DEFAULT_CONSTRUCTOR_STATE["note"]
 
     @staticmethod
     def from_json():
@@ -91,6 +97,9 @@ class EntryConstructor:
     def show(self, *args):
         print(self.__repr__())
 
+    def dump(self):
+        return CalendarEntry(datetime=self._datetime, duration=self._duration, periodicity=self._periodicity, note=self._note)
+
     def reset(self):
         pass
 
@@ -102,6 +111,8 @@ class EntryConstructor:
         allowed_attrs = ["datetime", "duration", "periodicity", "note", "create", "show", "reset"]
 
         while True:
+
+            print(f"Current state: {self}.")
             user_input = input(">> ")
             args = get_tokens(user_input)
             try:
@@ -111,7 +122,7 @@ class EntryConstructor:
                 else:
                     raise AttributeError(f"Cannot call {cmd}.")
                 if cmd.lower() == "create":
-                    print(result)
+                    print(f"Created {result}.")
                     break
             except AttributeError as e:
                 print(e)
@@ -122,19 +133,23 @@ class EntryConstructor:
         This method builds CalendarEntry from settings of a EntryCOnstructor. It is meant to be called by cli tool, not loop.
 
         If parameters are not set before calling create(), then this method uses sys.argv in the following way:
-        sys.argv[2] -> datetime
-        sys.argv[3] -> if there is no sys.argv[3] then make it a note else make it duration
-        sys.argv[4] -> note if exists
+        len(args) == 0 -> just make entry
+        len(args) == 1 -> args[0] -> note
+        len(args) == 2 -> args[0] -> datetime, args[1] -> note
+        len(args) == 3 -> args[0] -> datetime, args[1] -> duration, args[2] -> note
+        len(args) == 4 -> args[0] -> datetime, args[1] -> duration, args[2] -> periodicity, args[3] -> note 
         """
+        if len(args) == 0:
+            calendar_entry = self.dump()
+            calendar_entry.save()
+            return calendar_entry
+        
+        note = args[-1]
+        args = args[:-1]
+        keywords = ["datetime", "duration", "periodicity"]
+        kwargs = {kw: arg for kw, arg in zip(keywords, args)}
+        _kwargs = {kw: kwargs.get(kw, self.__getattribute__("_" + kw)) for kw in keywords}
      
-        datetime = self._datetime if self._datetime is not None else sys.argv[2]
-        if len(sys.argv) <= 4:
-            duration = self._duration
-            note = self._note if self._duration is not None else sys.argv[3]
-        else:
-            duration = int(sys.argv[3])
-            note = sys.argv[4]
-
-        calendar_entry = CalendarEntry(datetime=datetime, duration=duration, periodicity=self._periodicity, note=note) #type: ignore
+        calendar_entry = CalendarEntry(note=note, **_kwargs)
         calendar_entry.save()
         return calendar_entry
