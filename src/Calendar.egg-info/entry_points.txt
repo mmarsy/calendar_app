@@ -1,0 +1,2 @@
+[console_scripts]
+ctor = scripts:ctor

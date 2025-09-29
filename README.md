@@ -1,0 +1,1 @@
+This project revolves around CalendarEntries, efficiently making them and showing them.
