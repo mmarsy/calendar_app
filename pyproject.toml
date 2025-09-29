@@ -46,3 +46,4 @@ where = [
 [project.scripts]
     "calendar_setup" = "scripts:setup"
     "ctor" = "scripts:ctor"
+    "capp" = "scripts:cli"

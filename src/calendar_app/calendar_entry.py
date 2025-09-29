@@ -1,8 +1,13 @@
 from dataclasses import dataclass
-import sys
-from calendar_app.consts import APP_DIR
+from dotenv import load_dotenv
 from calendar_app.parser import get_tokens
 import json
+import sys
+import os
+
+
+load_dotenv()
+APP_DIR = os.environ["APP_DIR"]
 
 
 @dataclass()
@@ -50,11 +55,25 @@ class EntryConstructor:
     _periodicity: str | None = "weekly"
     _note: str | None = None
 
+    class BreakLoop(Exception):
+        """
+        Break loop function.
+        """
+
     @staticmethod
     def from_json():
         with open(f"{APP_DIR}/constructor_state.json", "r", encoding="utf-8") as f:
             kwargs = {"_" + key: val for key, val in json.load(f).items()}
             return EntryConstructor(**kwargs)
+        
+    def save(self):
+        with open(f"{APP_DIR}/constructor_state.json", "w", encoding="utf-8") as f:
+            data = {"datetime": self._datetime,
+                    "duration": self._duration,
+                    "periodicity": self._periodicity,
+                    "note": self._note}
+            json.dump(data, f, indent=4)
+            raise self.BreakLoop
 
     def set_datetime(self, new_datetime: str):
         self._datetime = new_datetime
@@ -83,6 +102,9 @@ class EntryConstructor:
     def show(self, *args):
         print(self.__repr__())
 
+    def reset(self):
+        pass
+
     def loop(self):
         """
         This method is meant to be called by looping script.
@@ -100,10 +122,11 @@ class EntryConstructor:
                     break
             except IndexError:
                 break
+            except self.BreakLoop:
+                break
             except AttributeError as e:
                 print(e)
                 continue
-
 
     def create(self):
         """

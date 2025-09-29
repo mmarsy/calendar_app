@@ -39,9 +39,24 @@ def setup():
 
 
 def ctor():
+    """Start loop for creating entry or modifying state"""
     setup()
     ctor = EntryConstructor.from_json()
     ctor.loop()
+
+
+def cli():
+    """Update saved state or create new entry"""
+    import sys
+
+    args = sys.argv[1:]
+    ctor = EntryConstructor.from_json()
+    ctor.__getattribute__(args[0])(*args[1:])
+
+    try:
+        ctor.save()
+    except EntryConstructor.BreakLoop:
+        pass
 
 
 if __name__ == "__main__":
