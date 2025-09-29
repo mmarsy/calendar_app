@@ -44,4 +44,5 @@ where = [
 
 # CLI entry point (if you want a command-line tool)
 [project.scripts]
+    "calendar_setup" = "scripts:setup"
     "ctor" = "scripts:ctor"

@@ -59,13 +59,25 @@ class EntryConstructor:
     def set_datetime(self, new_datetime: str):
         self._datetime = new_datetime
     
+    def datetime(self, new_datetime: str, *args):
+        self._datetime = new_datetime
+
     def set_duration(self, new_duration: str):
+        self._duration = int(new_duration)
+
+    def duration(self, new_duration: str, *args):
         self._duration = int(new_duration)
 
     def set_periodicity(self, new_periodicity: str):
         self._periodicity = new_periodicity
 
+    def periodicity(self, new_periodicity: str, *args):
+        self._periodicity = new_periodicity
+
     def set_note(self, new_note: str):
+        self._note = new_note
+
+    def note(self, new_note: str, *args):
         self._note = new_note
 
     def show(self, *args):
@@ -82,7 +94,10 @@ class EntryConstructor:
                 cmd = args[0]
                 if cmd.lower == "break":
                     break
-                self.__getattribute__(cmd)(*args[1:])
+                result = self.__getattribute__(cmd)(*args[1:])
+                if cmd.lower() == "create":
+                    print(result)
+                    break
             except IndexError:
                 break
             except AttributeError as e:

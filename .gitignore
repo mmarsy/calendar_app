@@ -2,3 +2,4 @@ venv/
 build/
 .calendar/
 *.egg-info/
+.env
