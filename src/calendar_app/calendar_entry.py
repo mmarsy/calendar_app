@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import sys
 from calendar_app.consts import APP_DIR
+from calendar_app.parser import get_tokens
 import json
 
 
@@ -38,12 +39,22 @@ class CalendarEntry:
 class EntryConstructor:
     """
     This class tracks state of the program allowing for efficient entry construction.
+
+    There should be 2 ways of controlling EntryConstructor:
+    1) loop: upon starting program you enter a loop where you can modify constructor however you like (note: no sys.argv ie expected there)
+    2) cli command: upon calling, creates instance of EntryConstructor and has it perform something, then saves it to .calendar/constructor_state.json
     """
 
     _datetime: str | None = None
     _duration: int | None = 60
     _periodicity: str | None = "weekly"
     _note: str | None = None
+
+    @staticmethod
+    def from_json():
+        with open(f"{APP_DIR}/constructor_state.json", "r", encoding="utf-8") as f:
+            kwargs = {"_" + key: val for key, val in json.load(f).items()}
+            return EntryConstructor(**kwargs)
 
     def set_datetime(self, new_datetime: str):
         self._datetime = new_datetime
@@ -60,21 +71,28 @@ class EntryConstructor:
     def show(self, *args):
         print(self.__repr__())
 
+    def loop(self):
+        """
+        This method is meant to be called by looping script.
+        """
+        while True:
+            user_input = input(">> ")
+            tokens = get_tokens(user_input)
+
     def create(self):
         """
-        This method builds CalendarEntry from settings of a EntryCOnstructor.
+        This method builds CalendarEntry from settings of a EntryCOnstructor. It is meant to be called by cli tool, not loop.
 
         If parameters are not set before calling create(), then this method uses sys.argv in the following way:
         sys.argv[1] -> datetime
         sys.argv[2] -> if there is no sys.argv[3] then make it a note else make it duration
         sys.argv[3] -> note if exists
         """
-
-        # here are some settings that JUST make sense
+     
         datetime = self._datetime if self._datetime is not None else sys.argv[1]
         if len(sys.argv) <= 3:
             duration = self._duration
-            note = sys.argv[2]
+            note = self._note if self._duration is not None else sys.argv[2]
         else:
             duration = int(sys.argv[2])
             note = sys.argv[3]
