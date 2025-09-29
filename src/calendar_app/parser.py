@@ -15,6 +15,7 @@ def get_tokens(string: str) -> list[str]:
         else:
             current_token["content"] += char
 
+    tokens.append(current_token["content"])
     return tokens
 
 if __name__ == "__main__":

@@ -77,7 +77,18 @@ class EntryConstructor:
         """
         while True:
             user_input = input(">> ")
-            tokens = get_tokens(user_input)
+            args = get_tokens(user_input)
+            try:
+                cmd = args[0]
+                if cmd.lower == "break":
+                    break
+                self.__getattribute__(cmd)(*args[1:])
+            except IndexError:
+                break
+            except AttributeError as e:
+                print(e)
+                continue
+
 
     def create(self):
         """
