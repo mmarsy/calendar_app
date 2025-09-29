@@ -1,13 +1,8 @@
 from dataclasses import dataclass
-from dotenv import load_dotenv
 from calendar_app.parser import get_tokens
+from calendar_app.consts import APP_DIR, DEFAULT_CONSTRUCTOR_STATE
 import json
 import sys
-import os
-
-
-load_dotenv()
-APP_DIR = os.environ["APP_DIR"]
 
 
 @dataclass()
@@ -50,15 +45,10 @@ class EntryConstructor:
     2) cli command: upon calling, creates instance of EntryConstructor and has it perform something, then saves it to .calendar/constructor_state.json
     """
 
-    _datetime: str | None = None
-    _duration: int | None = 60
-    _periodicity: str | None = "weekly"
-    _note: str | None = None
-
-    class BreakLoop(Exception):
-        """
-        Break loop function.
-        """
+    _datetime: str | None = DEFAULT_CONSTRUCTOR_STATE["datetime"]
+    _duration: int | None = DEFAULT_CONSTRUCTOR_STATE["duration"]
+    _periodicity: str | None = DEFAULT_CONSTRUCTOR_STATE["periodicity"]
+    _note: str | None = DEFAULT_CONSTRUCTOR_STATE["note"]
 
     @staticmethod
     def from_json():
@@ -73,7 +63,6 @@ class EntryConstructor:
                     "periodicity": self._periodicity,
                     "note": self._note}
             json.dump(data, f, indent=4)
-            raise self.BreakLoop
 
     def set_datetime(self, new_datetime: str):
         self._datetime = new_datetime
@@ -109,42 +98,42 @@ class EntryConstructor:
         """
         This method is meant to be called by looping script.
         """
+
+        allowed_attrs = ["datetime", "duration", "periodicity", "note", "create", "show", "reset"]
+
         while True:
             user_input = input(">> ")
             args = get_tokens(user_input)
             try:
                 cmd = args[0]
-                if cmd.lower == "break":
-                    break
-                result = self.__getattribute__(cmd)(*args[1:])
+                if cmd in allowed_attrs:
+                    result = self.__getattribute__(cmd)(*args[1:])
+                else:
+                    raise AttributeError(f"Cannot call {cmd}.")
                 if cmd.lower() == "create":
                     print(result)
                     break
-            except IndexError:
-                break
-            except self.BreakLoop:
-                break
             except AttributeError as e:
                 print(e)
                 continue
 
-    def create(self):
+    def create(self, *args):
         """
         This method builds CalendarEntry from settings of a EntryCOnstructor. It is meant to be called by cli tool, not loop.
 
         If parameters are not set before calling create(), then this method uses sys.argv in the following way:
-        sys.argv[1] -> datetime
-        sys.argv[2] -> if there is no sys.argv[3] then make it a note else make it duration
-        sys.argv[3] -> note if exists
+        sys.argv[2] -> datetime
+        sys.argv[3] -> if there is no sys.argv[3] then make it a note else make it duration
+        sys.argv[4] -> note if exists
         """
      
-        datetime = self._datetime if self._datetime is not None else sys.argv[1]
-        if len(sys.argv) <= 3:
+        datetime = self._datetime if self._datetime is not None else sys.argv[2]
+        if len(sys.argv) <= 4:
             duration = self._duration
-            note = self._note if self._duration is not None else sys.argv[2]
+            note = self._note if self._duration is not None else sys.argv[3]
         else:
-            duration = int(sys.argv[2])
-            note = sys.argv[3]
+            duration = int(sys.argv[3])
+            note = sys.argv[4]
 
         calendar_entry = CalendarEntry(datetime=datetime, duration=duration, periodicity=self._periodicity, note=note) #type: ignore
         calendar_entry.save()

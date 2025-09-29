@@ -1,0 +1,1 @@
+- make EntryConstructor use args instead of sys.argv

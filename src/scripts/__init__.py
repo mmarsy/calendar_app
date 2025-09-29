@@ -1,21 +1,15 @@
 from calendar_app.calendar_entry import EntryConstructor
-import dotenv
+from calendar_app.consts import DEFAULT_CONSTRUCTOR_STATE, APP_DIR
 
 
 def setup():
     import os
     import json
 
-    dotenv.load_dotenv()
-    APP_DIR = os.environ["APP_DIR"]
     try:
         os.makedirs(APP_DIR)
         with open(f"{APP_DIR}/constructor_state.json", "w") as f:
-            data = {"datetime": "01.10.1999",
-                    "duration": 60,
-                    "periodicity": "once",
-                    "note": ""}
-            json.dump(data, f, indent=4)
+            json.dump(DEFAULT_CONSTRUCTOR_STATE, f, indent=4)
     except OSError:
         if "constructor_state.json" in os.listdir(APP_DIR):
             with open(f"{APP_DIR}/constructor_state.json", "r") as f:
@@ -23,10 +17,10 @@ def setup():
                     temp_data = json.load(f)
                 except json.decoder.JSONDecodeError:
                     temp_data = {}
-                data = {"datetime": temp_data.get("datetime", "01.10.1999"),
-                    "duration": temp_data.get("duration", 60),
-                    "periodicity": temp_data.get("periodicity", "once"),
-                    "note": temp_data.get("note", "")}
+                data = {"datetime": temp_data.get("datetime", DEFAULT_CONSTRUCTOR_STATE["datetime"]),
+                    "duration": temp_data.get("duration", DEFAULT_CONSTRUCTOR_STATE["duration"]),
+                    "periodicity": temp_data.get("periodicity", DEFAULT_CONSTRUCTOR_STATE["periodicity"]),
+                    "note": temp_data.get("note", DEFAULT_CONSTRUCTOR_STATE["note"])}
                 
             with open(f"{APP_DIR}/constructor_state.json", "w") as f:
                 json.dump(data, f, indent=4)
@@ -41,7 +35,7 @@ def setup():
 def ctor():
     """Start loop for creating entry or modifying state"""
     setup()
-    ctor = EntryConstructor.from_json()
+    ctor = EntryConstructor()
     ctor.loop()
 
 
@@ -51,12 +45,10 @@ def cli():
 
     args = sys.argv[1:]
     ctor = EntryConstructor.from_json()
-    ctor.__getattribute__(args[0])(*args[1:])
-
-    try:
-        ctor.save()
-    except EntryConstructor.BreakLoop:
-        pass
+    result = ctor.__getattribute__(args[0])(*args[1:])
+    if result is not None:
+        print(result)
+    ctor.save()
 
 
 if __name__ == "__main__":
