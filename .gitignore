@@ -1,2 +1,5 @@
 venv/
 build/
+.calendar/
+app_dir.py
+*.egg-info

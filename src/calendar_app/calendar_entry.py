@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 import sys
+from calendar_app.consts import APP_DIR
+import json
 
 
 @dataclass()
@@ -19,10 +21,17 @@ class CalendarEntry:
     periodicity: str
     note: str
 
+    def to_dict(self):
+        return {
+            kw: self.__getattribute__(kw) for kw in ["datetime", "duration", "periodicity", "note"]   
+        }
+
     def save(self):
         """
         Save entry to system.
         """
+        with open(f"{APP_DIR}/calendar_data.json", "a", encoding="utf-8") as data_file:
+            json.dump(self.to_dict(), data_file, indent=4)
 
 
 @dataclass()
