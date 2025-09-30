@@ -39,17 +39,36 @@ def ctor():
     ctor.loop()
 
 
-def cli():
+def cli_ctor(args=None):
     """Update saved state or create new entry"""
     import sys
 
-    args = sys.argv[1:]
+    _args = args if args is not None else sys.argv[1:]
     ctor = EntryConstructor.from_json()
-    result = ctor.__getattribute__(args[0])(*args[1:])
+    result = ctor.__getattribute__(_args[0])(*_args[1:])
     if result is not None:
         print(result)
     ctor.save()
 
+
+def cli():
+    """Integrated cli""" 
+
+    # setup
+    import sys
+
+    args = sys.argv[1:]
+    try:
+        cmd = args[0]
+    except IndexError:
+        print("No cmd")
+        return
+
+    ctor_cmds = ["create", "reset", "show", "datetime", "duration", "peiodicity", "note"]
+    if cmd in ctor_cmds:
+        cli_ctor(args=args)
+        return
+    
 
 if __name__ == "__main__":
     setup()

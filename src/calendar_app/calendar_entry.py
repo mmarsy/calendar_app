@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from calendar_app.parser import get_tokens
-from calendar_app.consts import APP_DIR, DEFAULT_CONSTRUCTOR_STATE
+from calendar_app.consts import APP_DIR, DEFAULT_CONSTRUCTOR_STATE, PERIODICITY
 import json
 from datetime import datetime as dt_datetime
 import dateutil.parser as dtp
@@ -24,7 +24,7 @@ class CalendarEntry:
     note: str
 
     def __init__(self, datetime: str, duration: int, periodicity: str, note: str) -> None:
-        self.datetime = dtp.parse(datetime)
+        self.datetime = dtp.parse(datetime, dayfirst=True)
         self.duration = duration
         self.periodicity = periodicity
         self.note = note
@@ -52,6 +52,11 @@ class CalendarEntry:
         with open(f"{APP_DIR}/calendar_data.json", "w", encoding="utf-8") as data_file:
             json.dump(data, data_file, indent=4)
 
+    def compare(self, date: dt_datetime):
+        """
+        Tell if entry will occur on date.
+        """
+        return PERIODICITY[self.periodicity](self.datetime, date)
 
 
 @dataclass()
