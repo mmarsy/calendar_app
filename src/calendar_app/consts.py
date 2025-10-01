@@ -19,5 +19,6 @@ DEFAULT_CONSTRUCTOR_STATE = {
 PERIODICITY = {
     "weekly": lambda d1, d2: d1.weekday() == d2.weekday(),
     "daily": lambda d1, d2: True,
-    "annualy": lambda d1, d2: d1.month == d2.month and d1.day == d2.day
+    "annualy": lambda d1, d2: d1.month == d2.month and d1.day == d2.day,
+    "once": lambda d1, d2: d1.year == d2.year and d1.month == d2.month and d1.day == d2.day
 }

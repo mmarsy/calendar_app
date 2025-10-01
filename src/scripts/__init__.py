@@ -1,4 +1,5 @@
 from calendar_app.calendar_entry import EntryConstructor
+from calendar_app.my_calendar import Calendar
 from calendar_app.consts import DEFAULT_CONSTRUCTOR_STATE, APP_DIR
 
 
@@ -62,6 +63,19 @@ def cli():
         cmd = args[0]
     except IndexError:
         print("No cmd")
+        return
+    
+    if cmd == "setup":
+        setup()
+        return
+    
+    if cmd == "ctor":
+        ctor()
+        return
+    
+    if cmd == "day":
+        calendar = Calendar()
+        calendar.show(*args[1:])
         return
 
     ctor_cmds = ["create", "reset", "show", "datetime", "duration", "peiodicity", "note"]
