@@ -64,7 +64,6 @@ def cli():
     except IndexError:
         print("No cmd")
         return
-    
 
     if cmd == "setup":
         setup()
