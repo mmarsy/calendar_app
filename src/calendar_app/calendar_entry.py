@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from calendar_app.parser import get_tokens
-from calendar_app.consts import APP_DIR, DEFAULT_CONSTRUCTOR_STATE
+from calendar_app.consts import APP_DIR, DEFAULT_CONSTRUCTOR_STATE, PERIODICITY
 import json
-import sys
+from datetime import datetime as dt_datetime
+import dateutil.parser as dtp
 
 
-@dataclass()
+@dataclass(init=False)
 class CalendarEntry:
     """
     This class represent something that can be marked in a physical calendar. Combination of date, hour, place and note.
@@ -17,28 +18,45 @@ class CalendarEntry:
         periodicity: how often event will occur
     """
 
-    datetime: str
+    datetime: dt_datetime
     duration: int
     periodicity: str
     note: str
 
+    def __init__(self, datetime: str, duration: int, periodicity: str, note: str) -> None:
+        self.datetime = dtp.parse(datetime, dayfirst=True)
+        self.duration = duration
+        self.periodicity = periodicity
+        self.note = note
+
     def to_dict(self):
-        return {
-            kw: self.__getattribute__(kw) for kw in ["datetime", "duration", "periodicity", "note"]   
-        }
+        _d = {kw: self.__getattribute__(kw) for kw in ["duration", "periodicity", "note"]}
+        _d["datetime"] = self.datetime.strftime("%d.%m.%Y, %H:%M")
+        return _d
 
     def save(self):
         """
         Save entry to system.
         """
         with open(f"{APP_DIR}/calendar_data.json", "r", encoding="utf-8") as data_file:
-            data = json.load(data_file)
+            try:
+                data = json.load(data_file)
+            except json.decoder.JSONDecodeError:
+                if input("Data corrupted. Delete it? y/n ").lower() == "y":
+                    data = []
+                else:
+                    raise KeyboardInterrupt
 
         data.append(self.to_dict())
 
         with open(f"{APP_DIR}/calendar_data.json", "w", encoding="utf-8") as data_file:
             json.dump(data, data_file, indent=4)
 
+    def compare(self, date: dt_datetime):
+        """
+        Tell if entry will occur on date.
+        """
+        return PERIODICITY[self.periodicity](self.datetime, date)
 
 
 @dataclass()
@@ -69,27 +87,15 @@ class EntryConstructor:
                     "periodicity": self._periodicity,
                     "note": self._note}
             json.dump(data, f, indent=4)
-
-    def set_datetime(self, new_datetime: str):
-        self._datetime = new_datetime
     
     def datetime(self, new_datetime: str, *args):
         self._datetime = new_datetime
 
-    def set_duration(self, new_duration: str):
-        self._duration = int(new_duration)
-
     def duration(self, new_duration: str, *args):
         self._duration = int(new_duration)
 
-    def set_periodicity(self, new_periodicity: str):
-        self._periodicity = new_periodicity
-
     def periodicity(self, new_periodicity: str, *args):
         self._periodicity = new_periodicity
-
-    def set_note(self, new_note: str):
-        self._note = new_note
 
     def note(self, new_note: str, *args):
         self._note = new_note
@@ -101,7 +107,11 @@ class EntryConstructor:
         return CalendarEntry(datetime=self._datetime, duration=self._duration, periodicity=self._periodicity, note=self._note)
 
     def reset(self):
-        pass
+        """
+        Make constructor state default.
+        """
+        for key, val in DEFAULT_CONSTRUCTOR_STATE.items():
+            self.__setattr__("_" + key, val)
 
     def loop(self):
         """

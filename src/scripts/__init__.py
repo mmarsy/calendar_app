@@ -1,4 +1,5 @@
 from calendar_app.calendar_entry import EntryConstructor
+from calendar_app.my_calendar import Calendar
 from calendar_app.consts import DEFAULT_CONSTRUCTOR_STATE, APP_DIR
 
 
@@ -39,17 +40,49 @@ def ctor():
     ctor.loop()
 
 
-def cli():
+def cli_ctor(args=None):
     """Update saved state or create new entry"""
     import sys
 
-    args = sys.argv[1:]
+    _args = args if args is not None else sys.argv[1:]
     ctor = EntryConstructor.from_json()
-    result = ctor.__getattribute__(args[0])(*args[1:])
+    result = ctor.__getattribute__(_args[0])(*_args[1:])
     if result is not None:
         print(result)
     ctor.save()
 
+
+def cli():
+    """Integrated cli""" 
+
+    # setup
+    import sys
+
+    args = sys.argv[1:]
+    try:
+        cmd = args[0]
+    except IndexError:
+        print("No cmd")
+        return
+
+    if cmd == "setup":
+        setup()
+        return
+    
+    if cmd == "ctor":
+        ctor()
+        return
+    
+    if cmd == "day":
+        calendar = Calendar()
+        calendar.show(*args[1:])
+        return
+
+    ctor_cmds = ["create", "reset", "show", "datetime", "duration", "periodicity", "note"]
+    if cmd in ctor_cmds:
+        cli_ctor(args=args)
+        return
+    
 
 if __name__ == "__main__":
     setup()

@@ -2,4 +2,5 @@ venv/
 build/
 .calendar/
 *.egg-info/
+__pycache__/
 .env
