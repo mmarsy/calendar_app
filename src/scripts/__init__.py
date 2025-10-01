@@ -63,8 +63,12 @@ def cli():
     except IndexError:
         print("No cmd")
         return
+    
+    if cmd == "ctor":
+        ctor()
+        return
 
-    ctor_cmds = ["create", "reset", "show", "datetime", "duration", "peiodicity", "note"]
+    ctor_cmds = ["create", "reset", "show", "datetime", "duration", "periodicity", "note"]
     if cmd in ctor_cmds:
         cli_ctor(args=args)
         return

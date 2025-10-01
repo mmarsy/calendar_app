@@ -1,7 +1,7 @@
 CUrrent objective:
 The goal is to make function that allows user to select date and then they will be shown events that will occur on this day.
 
-- handle impropper jsons with calendar data 
+- handle improper jsons with calendar data 
 - implement usage of cloud storage
 - implement showing events on given day
 - (maybe) implement natural language interpretation
