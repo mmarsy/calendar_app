@@ -26,7 +26,7 @@ class Calendar:
             for entry in data:
                 self._data.append(CalendarEntry(**entry))
 
-    def show(self, string: str | None = None):
+    def show(self, string: str | None = None, *args):
         date = dtp.parse(string) if string is not None else datetime.datetime.now()
         for entry in self._data:
             if entry.compare(date):
